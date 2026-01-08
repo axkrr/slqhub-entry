@@ -1,6 +1,7 @@
 /**
  * slqhub-entry / entry.js
- * QX 多脚本统一入口（增强版 v2）
+ * QX 多脚本统一入口（增强版 v4）
+ * 兼容：dxstj / phpure / qd / videosniff / senplayer
  */
 
 const DEBUG = true; // true 打印日志，false 静默
@@ -24,20 +25,23 @@ const MAP = [
   },
   {
     name: "qd",
-    test: /api\.shanghailingye\.cn\/ad\/map.*/i, // 支持 query 参数
+    test: /api\.shanghailingye\.cn\/ad\/map.*/i,
     url: "https://raw.githubusercontent.com/axkrr/slqhub/main/Surge/Module/JS/qd.js",
   },
   {
     name: "videosniff",
     test: /video|m3u8|mpd/i,
-    url: "https://raw.githubusercontent.com/axkrr/slqhub/main/Surge/Module/JS/videosniff.js",
+    url: "https://raw.githubusercontent.com/axkrr/slqhub/main/QuantumultX/Rewrite/JS/videosniff.js",
+  },
+  {
+    name: "senplayer",
+    test: /senplayer|video|m3u8/i, // 匹配网页视频 m3u8 请求
+    url: "https://raw.githubusercontent.com/axkrr/slqhub/main/Surge/Module/JS/senplayer.js",
   },
 ];
 
 // 当前请求 URL（task 场景可能为空）
 const reqUrl = ($request && $request.url) || "";
-
-// 打印请求 URL（调试用）
 DEBUG && console.log("[slqhub-entry] request url:", reqUrl);
 
 // 查找命中规则
