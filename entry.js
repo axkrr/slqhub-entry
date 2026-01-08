@@ -1,18 +1,30 @@
 /**
- * slqhub-entry / entry.js
- * QX 多脚本统一入口（增强版 v4）
- * 兼容：dxstj / phpure / qd / videosniff / senplayer
+ * slqhub-entry.js (FINAL)
+ * QX 私有仓库统一入口 · 稳定终局版
  */
 
-const DEBUG = true; // true 打印日志，false 静默
+const DEBUG = true;
+const ONCE_KEY = "slqhub_page_once";
 
-/**
- * 分发规则表
- * name ：脚本标识
- * test ：URL 正则（支持 query 参数）
- * url ：私有仓库脚本地址
- */
+// ========== 页面级防抖 ==========
+if ($prefs.valueForKey(ONCE_KEY)) {
+  DEBUG && console.log("[slqhub-entry] page already handled");
+  $done({});
+}
+$prefs.setValueForKey("1", ONCE_KEY);
+
+// 页面切换自动释放
+setTimeout(() => {
+  $prefs.removeValueForKey(ONCE_KEY);
+}, 15000);
+
+// ========== 分发表 ==========
 const MAP = [
+  {
+    name: "videosniff",
+    test: /\.(m3u8)(\?.*)?$/i,
+    url: "https://raw.githubusercontent.com/axkrr/slqhub/main/QuantumultX/Rewrite/JS/videosniff.js",
+  },
   {
     name: "dxstj",
     test: /dxstj|dianxin|telecom/i,
@@ -20,58 +32,44 @@ const MAP = [
   },
   {
     name: "phpure",
-    test: /pornhub|phncdn|phprcdn/i,
+    test: /pornhub|phncdn/i,
     url: "https://raw.githubusercontent.com/axkrr/slqhub/main/Surge/Module/JS/phpure.js",
   },
   {
     name: "qd",
-    test: /api\.shanghailingye\.cn\/ad\/map.*/i,
+    test: /api\.shanghailingye\.cn\/ad\/map/i,
     url: "https://raw.githubusercontent.com/axkrr/slqhub/main/Surge/Module/JS/qd.js",
-  },
-  {
-    name: "videosniff",
-    test: /video|m3u8|mpd/i,
-    url: "https://raw.githubusercontent.com/axkrr/slqhub/main/QuantumultX/Rewrite/JS/videosniff.js",
-  },
-  {
-    name: "senplayer",
-    test: /senplayer|video|m3u8/i, // 匹配网页视频 m3u8 请求
-    url: "https://raw.githubusercontent.com/axkrr/slqhub/main/Surge/Module/JS/senplayer.js",
-  },
+  }
 ];
 
-// 当前请求 URL（task 场景可能为空）
 const reqUrl = ($request && $request.url) || "";
-DEBUG && console.log("[slqhub-entry] request url:", reqUrl);
+DEBUG && console.log("[slqhub-entry] url:", reqUrl);
 
-// 查找命中规则
-const hit = MAP.find((m) => m.test.test(reqUrl));
-
+const hit = MAP.find(m => m.test.test(reqUrl));
 if (!hit) {
-  DEBUG && console.log("[slqhub-entry] no match for this URL");
+  DEBUG && console.log("[slqhub-entry] no match");
   $done({});
-} else {
-  // 防止重复拉取同一个脚本
-  const alreadyKey = `slqhub_loaded_${hit.name}`;
-  if ($prefs.valueForKey(alreadyKey)) {
-    DEBUG && console.log("[slqhub-entry] already loaded:", hit.name);
-    $done({});
-  } else {
-    DEBUG && console.log(`[slqhub-entry] hit: ${hit.name} → ${hit.url}`);
-    $prefs.setValueForKey("1", alreadyKey);
-
-    // 运行期加载私有脚本（带 token）
-    $httpClient.get(hit.url, (err, resp, data) => {
-      if (err || !data) {
-        console.log("[slqhub-entry] load failed:", hit.url);
-        return $done({});
-      }
-      try {
-        eval(data);
-      } catch (e) {
-        console.log("[slqhub-entry] eval error:\n" + e);
-        $done({});
-      }
-    });
-  }
 }
+
+// ========== 脚本级防重复 ==========
+const LOAD_KEY = `slqhub_loaded_${hit.name}`;
+if ($prefs.valueForKey(LOAD_KEY)) {
+  DEBUG && console.log("[slqhub-entry] already loaded:", hit.name);
+  $done({});
+}
+$prefs.setValueForKey("1", LOAD_KEY);
+
+DEBUG && console.log(`[slqhub-entry] hit: ${hit.name}`);
+
+$httpClient.get(hit.url, (err, resp, data) => {
+  if (err || !data) {
+    console.log("[slqhub-entry] load failed:", hit.url);
+    return $done({});
+  }
+  try {
+    eval(data);
+  } catch (e) {
+    console.log("[slqhub-entry] eval error:", e);
+  }
+  $done({});
+});
