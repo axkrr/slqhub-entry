@@ -1,1 +1,1 @@
-# qx-entry
+# slqhub-entry
