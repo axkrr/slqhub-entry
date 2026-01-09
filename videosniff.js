@@ -1,7 +1,6 @@
 /**
  * SenPlayer Video Sniff (Quantumult X only)
  * 捕获 m3u8 / mp4 并自动播放（覆盖当前播放）
- * 修复 SenPlayer 内重复通知问题
  */
 
 const url = $request.url || "";
@@ -41,12 +40,12 @@ if (fp === lastFp && now - lastTime < 8000) {
 $prefs.setValueForKey(url, KEY_URL);
 $prefs.setValueForKey(now.toString(), KEY_TIME);
 
-// ===== SenPlayer 自动播放 =====
+// ===== SenPlayer 自动播放（强制切换） =====
 const playUrl =
   "senplayer://x-callback-url/play?url=" +
   encodeURIComponent(url) +
-  "&t=" +
-  now;
+  "&t=" + now +
+  "&force=true";  // <-- 保证覆盖当前播放
 
 // ===== 通知 =====
 $notify(
