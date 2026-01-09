@@ -1,6 +1,7 @@
 /**
  * SenPlayer Video Sniff (Quantumult X only)
  * 捕获 m3u8 / mp4 并自动播放（覆盖当前播放）
+ * 修复 SenPlayer 内重复通知问题
  */
 
 const url = $request.url || "";
@@ -8,6 +9,13 @@ const DEBUG = false;
 
 // 仅处理视频流
 if (!/\.(m3u8|mp4)(\?.*)?$/i.test(url)) {
+  $done({});
+}
+
+// ===== SenPlayer 内部请求过滤 =====
+const ua = ($request.headers["User-Agent"] || $request.headers["user-agent"] || "").toLowerCase();
+if (ua.includes("senplayer")) {
+  DEBUG && console.log("[videosniff] request from SenPlayer, skip notify");
   $done({});
 }
 
