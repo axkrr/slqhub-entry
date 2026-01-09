@@ -1,7 +1,7 @@
 /**
  * SenPlayer Video Sniff (Quantumult X only)
  * 捕获 m3u8 / mp4 并强制切换播放
- * 不限制站点 + 通知美化
+ * 不限制站点｜强防抖｜极简通知
  */
 
 const url = $request.url || "";
@@ -19,29 +19,31 @@ const ua =
    "").toLowerCase();
 
 if (ua.includes("senplayer")) {
-  DEBUG && console.log("[videosniff] senplayer internal");
+  DEBUG && console.log("[videosniff] senplayer internal request");
   $done({});
 }
 
-/* ========= 防重复 ========= */
-const KEY_URL  = "senplayer_last_url";
-const KEY_TIME = "senplayer_last_time";
+/* ========= 强防重复（网页级 + 播放级）========= */
+const KEY_FP   = "senplayer_fp";
+const KEY_TIME = "senplayer_time";
 
 const now = Date.now();
-const lastUrl  = $prefs.valueForKey(KEY_URL) || "";
+
+// URL 指纹（完全忽略参数）
+const fp = url.split("?")[0];
+
+// 读取历史
+const lastFp   = $prefs.valueForKey(KEY_FP) || "";
 const lastTime = parseInt($prefs.valueForKey(KEY_TIME) || "0");
 
-// 指纹：忽略参数，防止重复
-const fp     = url.split("?")[0];
-const lastFp = lastUrl.split("?")[0];
-
-// 8 秒内同资源不再触发
-if (fp === lastFp && now - lastTime < 8000) {
+// 同一视频 + 10 秒内 → 直接丢弃
+if (fp === lastFp && now - lastTime < 10000) {
   DEBUG && console.log("[videosniff] duplicate blocked");
   $done({});
 }
 
-$prefs.setValueForKey(url, KEY_URL);
+// 写入状态
+$prefs.setValueForKey(fp, KEY_FP);
 $prefs.setValueForKey(String(now), KEY_TIME);
 
 /* ========= SenPlayer 强制播放 ========= */
@@ -51,24 +53,11 @@ const playUrl =
   "&t=" + now +
   "&force=true";
 
-/* ========= 通知美化 ========= */
-// 提取域名
-let host = "";
-try {
-  host = fp.match(/^https?:\/\/([^\/]+)/i)?.[1] || "";
-} catch (e) {}
-
-const title = "🎬 SenPlayer 视频嗅探";
-const subtitle = host ? `来源：${host}` : "捕获到视频流";
-
-// 显示短链接，防刷屏
-const displayUrl =
-  fp.length > 90 ? fp.slice(0, 87) + "…" : fp;
-
+/* ========= 极简通知 ========= */
 $notify(
-  title,
-  subtitle,
-  displayUrl,
+  "🎬 SenPlayer",
+  "",
+  "获取视频流成功",
   { "open-url": playUrl }
 );
 
