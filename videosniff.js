@@ -1,24 +1,45 @@
 /**
  * SenPlayer Video Sniff (Quantumult X only)
- * 捕获 m3u8 / mp4 并自动播放（覆盖当前播放）
+ * 指定站点嗅探 m3u8 / mp4 并强制切换播放
  */
 
 const url = $request.url || "";
 const DEBUG = false;
 
-// 仅处理视频流
+/* ========= 仅处理视频流 ========= */
 if (!/\.(m3u8|mp4)(\?.*)?$/i.test(url)) {
   $done({});
 }
 
-// ===== SenPlayer 内部请求过滤 =====
-const ua = ($request.headers["User-Agent"] || $request.headers["user-agent"] || "").toLowerCase();
-if (ua.includes("senplayer")) {
-  DEBUG && console.log("[videosniff] request from SenPlayer, skip notify");
+/* ========= 站点白名单 ========= */
+const allowHosts = [
+  "pornhub.com",
+  "txh067.com",
+  "p3.unpljks.top"
+];
+
+const host = (() => {
+  try { return new URL(url).hostname; } catch { return ""; }
+})();
+
+if (!allowHosts.some(d => host.includes(d))) {
+  DEBUG && console.log("[videosniff] host not allowed:", host);
   $done({});
 }
 
-// ===== 防重复（URL + 时间窗口）=====
+/* ========= SenPlayer 内部请求过滤 ========= */
+const ua = (
+  $request.headers["User-Agent"] ||
+  $request.headers["user-agent"] ||
+  ""
+).toLowerCase();
+
+if (ua.includes("senplayer")) {
+  DEBUG && console.log("[videosniff] senplayer internal request");
+  $done({});
+}
+
+/* ========= 防重复 ========= */
 const KEY_URL  = "senplayer_last_url";
 const KEY_TIME = "senplayer_last_time";
 
@@ -26,32 +47,39 @@ const now = Date.now();
 const lastUrl  = $prefs.valueForKey(KEY_URL) || "";
 const lastTime = parseInt($prefs.valueForKey(KEY_TIME) || "0");
 
-// URL 指纹，避免动态参数
-const fp = url.slice(0, 80);
-const lastFp = lastUrl.slice(0, 80);
+// 指纹（忽略参数变化）
+const fp     = url.split("?")[0];
+const lastFp = lastUrl.split("?")[0];
 
-// 8 秒内 + 同指纹 → 拦截
+// 8 秒内同资源不重复
 if (fp === lastFp && now - lastTime < 8000) {
   DEBUG && console.log("[videosniff] duplicate blocked");
   $done({});
 }
 
-// 记录状态
 $prefs.setValueForKey(url, KEY_URL);
-$prefs.setValueForKey(now.toString(), KEY_TIME);
+$prefs.setValueForKey(String(now), KEY_TIME);
 
-// ===== SenPlayer 自动播放（强制切换） =====
+/* ========= SenPlayer 强制播放 ========= */
 const playUrl =
   "senplayer://x-callback-url/play?url=" +
   encodeURIComponent(url) +
   "&t=" + now +
-  "&force=true";  // <-- 保证覆盖当前播放
+  "&force=true";
 
-// ===== 通知 =====
+/* ========= 通知美化 ========= */
+const siteName =
+  host.includes("pornhub") ? "Pornhub" :
+  host.includes("txh067")  ? "TXH067"  :
+  host.includes("unpljks") ? "UNPLJKS" :
+  host;
+
+const displayUrl = fp.length > 80 ? fp.slice(0, 77) + "…" : fp;
+
 $notify(
   "🎬 SenPlayer 视频嗅探",
-  "点击立即播放（自动切换）",
-  url,
+  `来源站点：${siteName}`,
+  displayUrl,
   { "open-url": playUrl }
 );
 
