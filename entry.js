@@ -21,11 +21,6 @@ setTimeout(() => {
 // ========== 分发表 ==========
 const MAP = [
   {
-    name: "videosniff",
-    test: /\.(m3u8)(\?.*)?$/i,
-    url: "https://raw.githubusercontent.com/axkrr/slqhub/main/QuantumultX/Rewrite/JS/videosniff.js",
-  },
-  {
     name: "dxstj",
     test: /dxstj|dianxin|telecom/i,
     url: "https://raw.githubusercontent.com/axkrr/slqhub/main/Surge/Module/JS/dxstj.js",
