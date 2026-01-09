@@ -1,25 +1,34 @@
 /**
- * slqhub-entry.js (FINAL)
- * QX 私有仓库统一入口 · 稳定终局版
+ * slqhub-entry.js
+ * QX 私有仓库统一入口
+ * author: axkr
  */
 
 const DEBUG = true;
-const ONCE_KEY = "slqhub_page_once";
 
-// ========== 页面级防抖 ==========
-if ($prefs.valueForKey(ONCE_KEY)) {
+// ================== 页面级防抖 ==================
+const PAGE_KEY = "slqhub_page_once";
+
+if ($prefs.valueForKey(PAGE_KEY)) {
   DEBUG && console.log("[slqhub-entry] page already handled");
   $done({});
+  return;
 }
-$prefs.setValueForKey("1", ONCE_KEY);
 
-// 页面切换自动释放
+$prefs.setValueForKey("1", PAGE_KEY);
+
+// 15 秒后自动释放（页面切换）
 setTimeout(() => {
-  $prefs.removeValueForKey(ONCE_KEY);
+  $prefs.removeValueForKey(PAGE_KEY);
 }, 15000);
 
-// ========== 分发表 ==========
+// ================== 分发表 ==================
 const MAP = [
+  {
+    name: "videosniff",
+    test: /\.(m3u8|mp4)(\?.*)?$/i,
+    url: "https://raw.githubusercontent.com/axkrr/slqhub/main/QuantumultX/Rewrite/JS/videosniff.js",
+  },
   {
     name: "dxstj",
     test: /dxstj|dianxin|telecom/i,
@@ -37,34 +46,43 @@ const MAP = [
   }
 ];
 
+// ================== 命中判断 ==================
 const reqUrl = ($request && $request.url) || "";
-DEBUG && console.log("[slqhub-entry] url:", reqUrl);
+DEBUG && console.log("[slqhub-entry] request:", reqUrl);
 
-const hit = MAP.find(m => m.test.test(reqUrl));
+const hit = MAP.find(item => item.test.test(reqUrl));
+
 if (!hit) {
   DEBUG && console.log("[slqhub-entry] no match");
   $done({});
+  return;
 }
 
-// ========== 脚本级防重复 ==========
+// ================== 脚本级防重复 ==================
 const LOAD_KEY = `slqhub_loaded_${hit.name}`;
+
 if ($prefs.valueForKey(LOAD_KEY)) {
   DEBUG && console.log("[slqhub-entry] already loaded:", hit.name);
   $done({});
+  return;
 }
+
 $prefs.setValueForKey("1", LOAD_KEY);
+DEBUG && console.log("[slqhub-entry] hit:", hit.name);
 
-DEBUG && console.log(`[slqhub-entry] hit: ${hit.name}`);
-
+// ================== 拉取并执行私有脚本 ==================
 $httpClient.get(hit.url, (err, resp, data) => {
   if (err || !data) {
     console.log("[slqhub-entry] load failed:", hit.url);
-    return $done({});
+    $done({});
+    return;
   }
+
   try {
     eval(data);
   } catch (e) {
     console.log("[slqhub-entry] eval error:", e);
   }
+
   $done({});
 });
