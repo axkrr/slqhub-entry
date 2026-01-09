@@ -1,6 +1,7 @@
 /**
  * SenPlayer Video Sniff (Quantumult X only)
- * 指定站点嗅探 m3u8 / mp4 并强制切换播放
+ * 捕获 m3u8 / mp4 并强制切换播放
+ * 不限制站点 + 通知美化
  */
 
 const url = $request.url || "";
@@ -11,31 +12,14 @@ if (!/\.(m3u8|mp4)(\?.*)?$/i.test(url)) {
   $done({});
 }
 
-/* ========= 站点白名单 ========= */
-const allowHosts = [
-  "pornhub.com",
-  "txh067.com",
-  "p3.unpljks.top"
-];
-
-const host = (() => {
-  try { return new URL(url).hostname; } catch { return ""; }
-})();
-
-if (!allowHosts.some(d => host.includes(d))) {
-  DEBUG && console.log("[videosniff] host not allowed:", host);
-  $done({});
-}
-
 /* ========= SenPlayer 内部请求过滤 ========= */
-const ua = (
-  $request.headers["User-Agent"] ||
-  $request.headers["user-agent"] ||
-  ""
-).toLowerCase();
+const ua =
+  ($request.headers["User-Agent"] ||
+   $request.headers["user-agent"] ||
+   "").toLowerCase();
 
 if (ua.includes("senplayer")) {
-  DEBUG && console.log("[videosniff] senplayer internal request");
+  DEBUG && console.log("[videosniff] senplayer internal");
   $done({});
 }
 
@@ -47,11 +31,11 @@ const now = Date.now();
 const lastUrl  = $prefs.valueForKey(KEY_URL) || "";
 const lastTime = parseInt($prefs.valueForKey(KEY_TIME) || "0");
 
-// 指纹（忽略参数变化）
+// 指纹：忽略参数，防止重复
 const fp     = url.split("?")[0];
 const lastFp = lastUrl.split("?")[0];
 
-// 8 秒内同资源不重复
+// 8 秒内同资源不再触发
 if (fp === lastFp && now - lastTime < 8000) {
   DEBUG && console.log("[videosniff] duplicate blocked");
   $done({});
@@ -62,23 +46,28 @@ $prefs.setValueForKey(String(now), KEY_TIME);
 
 /* ========= SenPlayer 强制播放 ========= */
 const playUrl =
-  "senplayer://x-callback-url/play?url=" +
-  encodeURIComponent(url) +
+  "senplayer://x-callback-url/play" +
+  "?url=" + encodeURIComponent(url) +
   "&t=" + now +
   "&force=true";
 
 /* ========= 通知美化 ========= */
-const siteName =
-  host.includes("pornhub") ? "Pornhub" :
-  host.includes("txh067")  ? "TXH067"  :
-  host.includes("unpljks") ? "UNPLJKS" :
-  host;
+// 提取域名
+let host = "";
+try {
+  host = fp.match(/^https?:\/\/([^\/]+)/i)?.[1] || "";
+} catch (e) {}
 
-const displayUrl = fp.length > 80 ? fp.slice(0, 77) + "…" : fp;
+const title = "🎬 SenPlayer 视频嗅探";
+const subtitle = host ? `来源：${host}` : "捕获到视频流";
+
+// 显示短链接，防刷屏
+const displayUrl =
+  fp.length > 90 ? fp.slice(0, 87) + "…" : fp;
 
 $notify(
-  "🎬 SenPlayer 视频嗅探",
-  `来源站点：${siteName}`,
+  title,
+  subtitle,
   displayUrl,
   { "open-url": playUrl }
 );
