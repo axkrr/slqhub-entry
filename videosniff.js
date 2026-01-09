@@ -2,17 +2,14 @@
  * SenPlayer Video Sniff (QX Final)
  *********************************/
 
-const req = $request;
-const resp = $response;
-
-if (!req || !resp || !resp.body) {
+if (!$request || !$response || !$response.body) {
   $done({});
 }
 
-const url = req.url;
-const body = resp.body;
+const url = $request.url;
+const body = $response.body;
 
-// 只处理主播放列表
+// 只处理主 m3u8
 if (!body.includes("#EXTM3U") || !body.includes("#EXT-X-STREAM-INF")) {
   $done({});
 }
@@ -24,7 +21,6 @@ const last = $prefs.valueForKey(KEY) || "";
 if (last === url) {
   $done({});
 }
-
 $prefs.setValueForKey(url, KEY);
 
 // ========= 选最高码率 =========
@@ -37,8 +33,8 @@ for (let i = 0; i < lines.length; i++) {
   if (l.includes("BANDWIDTH=")) {
     const m = l.match(/BANDWIDTH=(\d+)/);
     const bw = m ? parseInt(m[1]) : 0;
+    const next = lines[i + 1];
 
-    const next = lines[i + 1] || "";
     if (bw > maxBw && next && !next.startsWith("#")) {
       maxBw = bw;
       best = next.trim();
@@ -56,7 +52,7 @@ if (best) {
   }
 }
 
-// ========= 播放 =========
+// ========= SenPlayer 播放 =========
 const now = Date.now();
 const playUrl =
   "senplayer://x-callback-url/play?url=" +
@@ -64,11 +60,12 @@ const playUrl =
   "&t=" +
   now;
 
-$notification.post(
+// ✅ QX 正确通知方式
+$notify(
   "🎬 SenPlayer",
   "已切换至最高画质",
   finalUrl,
-  { url: playUrl }
+  { "open-url": playUrl }
 );
 
 $done({});
