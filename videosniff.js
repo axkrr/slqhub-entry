@@ -1,71 +1,53 @@
-/*********************************
- * SenPlayer Video Sniff (QX Final)
- *********************************/
+/**
+ * SenPlayer Video Sniff (Quantumult X only)
+ * 捕获 m3u8 / mp4 并自动播放（覆盖当前播放）
+ */
 
-if (!$request || !$response || !$response.body) {
+const url = $request.url || "";
+const DEBUG = false;
+
+// 仅处理视频流
+if (!/\.(m3u8|mp4)(\?.*)?$/i.test(url)) {
   $done({});
 }
 
-const url = $request.url;
-const body = $response.body;
+// ===== 防重复（URL + 时间窗口）=====
+const KEY_URL  = "senplayer_last_url";
+const KEY_TIME = "senplayer_last_time";
 
-// 只处理主 m3u8
-if (!body.includes("#EXTM3U") || !body.includes("#EXT-X-STREAM-INF")) {
-  $done({});
-}
-
-// ========= 去重 =========
-const KEY = "senplayer_last_m3u8";
-const last = $prefs.valueForKey(KEY) || "";
-
-if (last === url) {
-  $done({});
-}
-$prefs.setValueForKey(url, KEY);
-
-// ========= 选最高码率 =========
-let best = "";
-let maxBw = 0;
-
-const lines = body.split("\n");
-for (let i = 0; i < lines.length; i++) {
-  const l = lines[i];
-  if (l.includes("BANDWIDTH=")) {
-    const m = l.match(/BANDWIDTH=(\d+)/);
-    const bw = m ? parseInt(m[1]) : 0;
-    const next = lines[i + 1];
-
-    if (bw > maxBw && next && !next.startsWith("#")) {
-      maxBw = bw;
-      best = next.trim();
-    }
-  }
-}
-
-let finalUrl = url;
-if (best) {
-  if (best.startsWith("http")) {
-    finalUrl = best;
-  } else {
-    const base = url.substring(0, url.lastIndexOf("/") + 1);
-    finalUrl = base + best;
-  }
-}
-
-// ========= SenPlayer 播放 =========
 const now = Date.now();
+const lastUrl  = $prefs.valueForKey(KEY_URL) || "";
+const lastTime = parseInt($prefs.valueForKey(KEY_TIME) || "0");
+
+// URL 指纹，避免动态参数
+const fp = url.slice(0, 80);
+const lastFp = lastUrl.slice(0, 80);
+
+// 8 秒内 + 同指纹 → 拦截
+if (fp === lastFp && now - lastTime < 8000) {
+  DEBUG && console.log("[videosniff] duplicate blocked");
+  $done({});
+}
+
+// 记录状态
+$prefs.setValueForKey(url, KEY_URL);
+$prefs.setValueForKey(now.toString(), KEY_TIME);
+
+// ===== SenPlayer 自动播放 =====
 const playUrl =
   "senplayer://x-callback-url/play?url=" +
-  encodeURIComponent(finalUrl) +
+  encodeURIComponent(url) +
   "&t=" +
   now;
 
-// ✅ QX 正确通知方式
+// ===== 通知 =====
 $notify(
-  "🎬 SenPlayer",
-  "已切换至最高画质",
-  finalUrl,
+  "🎬 SenPlayer 视频嗅探",
+  "点击立即播放（自动切换）",
+  url,
   { "open-url": playUrl }
 );
+
+DEBUG && console.log("[videosniff] play:", url);
 
 $done({});
