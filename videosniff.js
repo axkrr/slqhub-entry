@@ -1,7 +1,7 @@
 /**
  * SenPlayer Video Sniff (Quantumult X only)
  * 捕获 m3u8 / mp4 并强制切换播放
- * 不限制站点｜强防抖｜极简通知
+ * 网页防抖 + SenPlayer 内防重复 + 极简通知
  */
 
 const url = $request.url || "";
@@ -11,6 +11,18 @@ const DEBUG = false;
 if (!/\.(m3u8|mp4)(\?.*)?$/i.test(url)) {
   $done({});
 }
+
+/* ========= 网页级防抖 ========= */
+const PAGE_KEY = "senplayer_page_once";
+if ($prefs.valueForKey(PAGE_KEY)) {
+  DEBUG && console.log("[videosniff] page already handled");
+  $done({});
+}
+$prefs.setValueForKey("1", PAGE_KEY);
+// 页面切换后 15 秒自动释放
+setTimeout(() => {
+  $prefs.removeValueForKey(PAGE_KEY);
+}, 15000);
 
 /* ========= SenPlayer 内部请求过滤 ========= */
 const ua =
@@ -23,21 +35,17 @@ if (ua.includes("senplayer")) {
   $done({});
 }
 
-/* ========= 强防重复（网页级 + 播放级）========= */
+/* ========= 视频去重 ========= */
 const KEY_FP   = "senplayer_fp";
 const KEY_TIME = "senplayer_time";
 
 const now = Date.now();
-
-// URL 指纹（完全忽略参数）
-const fp = url.split("?")[0];
-
-// 读取历史
+const fp = url.split("?")[0];           // URL 指纹，忽略参数
 const lastFp   = $prefs.valueForKey(KEY_FP) || "";
 const lastTime = parseInt($prefs.valueForKey(KEY_TIME) || "0");
 
-// 同一视频 + 10 秒内 → 直接丢弃
-if (fp === lastFp && now - lastTime < 10000) {
+// 同一视频 + 8 秒内 → 不再通知
+if (fp === lastFp && now - lastTime < 8000) {
   DEBUG && console.log("[videosniff] duplicate blocked");
   $done({});
 }
