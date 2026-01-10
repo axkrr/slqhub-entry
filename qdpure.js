@@ -1,6 +1,6 @@
-/**
- * @name qdpure_v3
- * @desc 去开屏广告,异常兜底
+/*
+ * @name qdpure_v5_qx
+ * @desc 去开屏广告
  */
 
 if (typeof $response === 'undefined') {
@@ -11,19 +11,18 @@ if (typeof $response === 'undefined') {
 let body = $response.body || '';
 let headers = $response.headers || {};
 
-// 预防缓存
+// ===== 防缓存 =====
 delete headers['ETag'];
 delete headers['Last-Modified'];
 headers['Cache-Control'] = 'no-cache, no-store, must-revalidate';
 headers['Pragma'] = 'no-cache';
 headers['Expires'] = '0';
 
-// 尝试解析 JSON
+// ===== 解析 JSON 广告接口 =====
 try {
   let obj = JSON.parse(body);
 
   if (obj && typeof obj === 'object') {
-    // 开屏/首页广告常见字段
     const adKeys = [
       'data', 'list', 'ads', 'ad_list', 'items', 'banners',
       'advertisement', 'startPage', 'openAds'
@@ -35,7 +34,6 @@ try {
       }
     });
 
-    // 强制返回成功状态
     if ('code' in obj) obj.code = 1;
     if ('status' in obj) obj.status = 1;
     if ('message' in obj) obj.message = 'success';
@@ -45,8 +43,7 @@ try {
     return;
   }
 } catch (e) {
-  // 非 JSON 响应直接返回空或原 body（兜底）
-  console.log('[qdpure_v3] parse fail, returning empty JSON for safety');
+  console.log('[qdpure_v5_qx] parse fail, returning empty JSON for safety');
   $done({
     body: '{}',
     headers
@@ -54,5 +51,23 @@ try {
   return;
 }
 
-// 默认兜底
+// ===== 拦截常见广告图片请求 =====
+const adImagePatterns = [
+  /p0\.meituan\.net\/bizad\//i,
+  /static\.66mobi\.com\/creativeAudit\//i,
+  /qudaapi\.8quan\.com\/index\/source\/show/i,
+  /p66-ad\.adkwai\.com\//i,
+  /adimg|ads|advert/i
+];
+
+if (adImagePatterns.some(pattern => pattern.test($request.url))) {
+  // 返回空图片 body 防止白屏影响
+  $done({
+    body: '',
+    headers
+  });
+  return;
+}
+
+// ===== 兜底返回原始 body =====
 $done({ body, headers });
