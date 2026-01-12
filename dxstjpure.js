@@ -1,5 +1,5 @@
 /*
-脚本名称: 大学搜题酱 - 极致净化版
+脚本名称: 大学搜题酱净化
 功能: 1. 屏蔽首页弹窗 2. 移除开屏广告策略 & 计时
 */
 
@@ -8,7 +8,7 @@ if (body) {
     let obj = JSON.parse(body);
     let url = $request.url;
 
-    // --- 1. 核心：修改初始化配置 (解决开屏计时) ---
+    // 修改初始化配置
     if (url.indexOf("init/config/init") !== -1) {
         if (obj.data) {
             // 移除开屏广告配置
@@ -20,7 +20,7 @@ if (body) {
         }
     }
 
-    // --- 2. 处理首页弹窗 (popupconfig) ---
+    // 处理首页弹窗
     if (url.indexOf("init/config/popupconfig") !== -1) {
         if (obj.data) {
             obj.data.popupList = []; // 清空弹窗
