@@ -1,29 +1,17 @@
-/**
- * qdpure_admap_kill.js
- * Only for Quantumult X
- * Function: 清空 ad/map 返回的广告调度数据
- */
+/*
+脚本名称: 去哒 App 开屏去广告
+脚本功能: 修改响应体，重置等待时间为0，清空广告队列
+*/
 
-if (!$response || !$response.body) {
-  $done({});
-  return;
-}
+var body = $response.body;
+var obj = JSON.parse(body);
 
-let body = $response.body;
+// 核心逻辑：修改数据
+obj.load = 0;       // 将开屏等待时间 4000 改为 0
+obj.bid = [];       // 清空广告位列表
+obj.data = [];      // 清空可能存在的其他数据
+obj.lns = 0;        // 尝试关闭某些逻辑开关 (可选)
 
-try {
-  let obj = JSON.parse(body);
-
-  // 核心：清空广告调度
-  if (Array.isArray(obj.bid)) obj.bid = [];
-  if (Array.isArray(obj.data)) obj.data = [];
-
-  // 保证 App 判定成功
-  if ('code' in obj) obj.code = 1;
-  if ('message' in obj) obj.message = 'success';
-
-  $done({ body: JSON.stringify(obj) });
-} catch (e) {
-  // 非 JSON（或 SDK 异常返回），直接放行
-  $done({});
-}
+// 重新打包返回
+body = JSON.stringify(obj);
+$done({body});
