@@ -8,9 +8,9 @@ if (body) {
         let obj = JSON.parse(body);
         let url = $request.url;
 
-        // 核心：处理广告网关接口
+        // 处理广告网关接口
         if (url.indexOf("gateway/api/umetrip/advert") !== -1) {
-            // 航旅的广告通常在 data 节点下，根据不同版本可能在不同层级
+            // 航旅的广告通常在data
             if (obj.data) {
                 // 清空 Banner 列表
                 if (obj.data.bannerList) obj.data.bannerList = [];
