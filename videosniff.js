@@ -1,44 +1,43 @@
 /**
- * SenPlayer Video Sniff (Quantumult X only)
- * 只通知一次，点击后强制播放
+ * SenPlayer Video Sniff (Quantumult X)
+ * 优化版：增强兼容性 + 防死锁
  */
 
 const url = $request.url || "";
-
-/* 只处理视频 */
-if (!/\.(m3u8|mp4)(\?.*)?$/i.test(url)) {
-  $done({});
-}
-
-/* ===== 页面级 once 防抖（核心）===== */
 const ONCE_KEY = "senplayer_once";
 
-if ($prefs.valueForKey(ONCE_KEY)) {
-  // 已经通知过，后面全部丢弃
+// 1. 扩展匹配规则：增加对常见的 m3u8/mp4 特征的识别
+const videoRegex = /\.(m3u8|mp4|mov|avi|flv)(\?.*)?$|playlist\.m3u8/i;
+
+if (!videoRegex.test(url)) {
   $done({});
+} else {
+  // 2. 检查锁（放在正则匹配之后，减少干扰）
+  if ($prefs.valueForKey(ONCE_KEY)) {
+    console.log("🚫 SenPlayer: 已有弹窗，跳过检测: " + url);
+    $done({});
+  } else {
+    // 3. 构造播放地址
+    const playUrl = "senplayer://x-callback-url/play?url=" + encodeURIComponent(url) + "&force=true";
+
+    // 4. 执行通知
+    $notify(
+      "🎬 SenPlayer",
+      "发现视频流",
+      "点击立即跳转播放",
+      { "open-url": playUrl }
+    );
+
+    // 5. 通知成功后再加锁
+    $prefs.setValueForKey("1", ONCE_KEY);
+    console.log("✅ SenPlayer: 抓取成功并已上锁: " + url);
+
+    // 10秒后释放，方便刷下一个视频
+    setTimeout(() => {
+      $prefs.removeValueForKey(ONCE_KEY);
+      console.log("🔓 SenPlayer: 自动解锁");
+    }, 10000);
+
+    $done({});
+  }
 }
-
-// 立刻上锁（非常关键）
-$prefs.setValueForKey("1", ONCE_KEY);
-
-// 15 秒后自动释放（页面切换够用）
-setTimeout(() => {
-  $prefs.removeValueForKey(ONCE_KEY);
-}, 15000);
-
-/* ===== SenPlayer 播放 ===== */
-const playUrl =
-  "senplayer://x-callback-url/play" +
-  "?url=" + encodeURIComponent(url) +
-  "&t=" + Date.now() +
-  "&force=true";
-
-/* ===== 极简通知 ===== */
-$notify(
-  "🎬 SenPlayer",
-  "",
-  "获取视频流成功",
-  { "open-url": playUrl }
-);
-
-$done({});
