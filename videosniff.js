@@ -1,6 +1,5 @@
 /**
- * SenPlayer Video Sniff (Quantumult X)
- * 修复版：防止残留锁死
+ * SenPlayerVideoSniff
  */
 
 const url = $request.url || "";
@@ -12,12 +11,12 @@ if (videoRegex.test(url)) {
   const now = Date.now();
 
   // --- 逻辑判断 ---
-  // 如果 15 秒内已经弹过窗，则跳过
-  if (lastTime && (now - parseInt(lastTime) < 15000)) {
+  // 如果 20 秒内已经弹过窗，则跳过
+  if (lastTime && (now - parseInt(lastTime) < 20000)) {
     console.log("🚫 SenPlayer: 冷却中，跳过检测");
     $done({});
   } else {
-    // 满足条件：要么没锁，要么锁已经过期（超过15秒）
+    // 满足条件：要么没锁，要么锁已经过期（超过20秒）
     const playUrl = "senplayer://x-callback-url/play?url=" + encodeURIComponent(url) + "&force=true";
 
     $notify("🎬 SenPlayer", "发现视频流", "点击跳转播放", { "open-url": playUrl });
