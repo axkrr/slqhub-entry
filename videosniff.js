@@ -1,7 +1,7 @@
 /**
- * SenPlayerVideoSniff
- * author:axkrr,御清弦
- */
+ * @name:SenPlayerVideoSniff
+ * @author:axkrr,御清弦
+*/
 
 const url = $request.url || "";
 const ONCE_KEY = "senplayer_once";
