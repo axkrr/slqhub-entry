@@ -14,7 +14,7 @@ if (body) {
         if (url.indexOf("gateway/api/umetrip/advert") !== -1) {
             // 航旅的广告通常在data
             if (obj.data) {
-                // 清空 Banner 列表
+                // 清空Banner列表
                 if (obj.data.bannerList) obj.data.bannerList = [];
                 if (obj.data.ads) obj.data.ads = [];
                 // 处理弹窗广告
