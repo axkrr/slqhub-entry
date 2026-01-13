@@ -1,6 +1,7 @@
-/*
-脚本名称: 大学搜题酱净化
-功能: 1. 屏蔽首页弹窗 2. 移除开屏广告策略 & 计时
+/**
+ * @name dxstjpure
+ * @desc 大学搜题酱净化
+ * @author axkrr
 */
 
 let body = $response.body;
@@ -23,7 +24,7 @@ if (body) {
     // 处理首页弹窗
     if (url.indexOf("init/config/popupconfig") !== -1) {
         if (obj.data) {
-            obj.data.popupList = []; // 清空弹窗
+            obj.data.popupList = [];
             if (obj.data.vipSales) obj.data.vipSales.needShow = false;
         }
     }
