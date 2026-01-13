@@ -2,7 +2,7 @@
  * @name phpure
  * @desc PornHub净化脚本
  * @author ddgksf2013,axkrr
- */
+*/
 
 // 只有当存在响应体时才处理
 if (typeof $response !== "undefined" && $response.body) {
