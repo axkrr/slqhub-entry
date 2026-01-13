@@ -1,12 +1,12 @@
 /**
- * slqhub-entry.js
- * QX 私有仓库统一入口
- * author: axkr
- */
+ * @name slqhubentry
+ * @desc 适配私有仓库qx重写脚本获取
+ * @author axkrr
+*/
 
 const DEBUG = true;
 
-// ================== 页面级防抖 ==================
+// 页面级防抖
 const PAGE_KEY = "slqhub_page_once";
 
 if ($prefs.valueForKey(PAGE_KEY)) {
@@ -17,12 +17,12 @@ if ($prefs.valueForKey(PAGE_KEY)) {
 
 $prefs.setValueForKey("1", PAGE_KEY);
 
-// 15 秒后自动释放（页面切换）
+// 15秒后自动释放
 setTimeout(() => {
   $prefs.removeValueForKey(PAGE_KEY);
 }, 15000);
 
-// ================== 分发表 ==================
+// 分发表
 const MAP = [
   {
     name: "videosniff",
@@ -46,7 +46,7 @@ const MAP = [
   }
 ];
 
-// ================== 命中判断 ==================
+// 命中判断
 const reqUrl = ($request && $request.url) || "";
 DEBUG && console.log("[slqhub-entry] request:", reqUrl);
 
@@ -58,7 +58,7 @@ if (!hit) {
   return;
 }
 
-// ================== 脚本级防重复 ==================
+// 脚本级防重复
 const LOAD_KEY = `slqhub_loaded_${hit.name}`;
 
 if ($prefs.valueForKey(LOAD_KEY)) {
@@ -70,7 +70,7 @@ if ($prefs.valueForKey(LOAD_KEY)) {
 $prefs.setValueForKey("1", LOAD_KEY);
 DEBUG && console.log("[slqhub-entry] hit:", hit.name);
 
-// ================== 拉取并执行私有脚本 ==================
+// 拉取并执行私有脚本
 $httpClient.get(hit.url, (err, resp, data) => {
   if (err || !data) {
     console.log("[slqhub-entry] load failed:", hit.url);
