@@ -1,7 +1,7 @@
 /**
  * @name slqhubentry
  * @desc 适配私有仓库qx重写脚本获取
- * @author axkrr,Peng-YM,
+ * @author axkrr,Peng-YM,dcpeng
 */
 
 const DEBUG = true;
