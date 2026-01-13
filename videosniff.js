@@ -1,5 +1,5 @@
 /**
- * @name SenPlayerVideoSniff
+ * @name senplayervideosniff
  * @desc 获取网页视频流跳转SenPlayer播放
  * @author axkrr,御清弦
 */
