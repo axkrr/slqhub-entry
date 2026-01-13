@@ -1,7 +1,7 @@
 /*
- * name: qdpure
- * desc: 去哒广告净化
- * author: axkrr
+ * @name qdpure
+ * @desc 去哒广告净化
+ * @author axkrr
 */
 
 var body = $response.body;
