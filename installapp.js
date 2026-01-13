@@ -1,3 +1,9 @@
+/**
+ * @name installapp
+ * @desc IPATool辅助安装IPA工具
+ * @author githubdulong,axkrr
+*/
+
 // 获取参数
 const { name, displayVersion, bundleId, fileName } = Object.fromEntries(
   new URL(decodeURIComponent(decodeURIComponent($request.url))).searchParams
@@ -37,7 +43,7 @@ const body = `<?xml version="1.0" encoding="UTF-8"?>
 </dict>
 </plist>`;
 
-// 适配 Quantumult X 的返回格式
+// 适配QuantumultX的返回格式
 $done({
     response: {
         status: 200,
