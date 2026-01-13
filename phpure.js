@@ -1,6 +1,6 @@
 /**
  * @name phpure
- * @desc PornHub净化脚本
+ * @desc PornHub净化
  * @author ddgksf2013,axkrr
 */
 
