@@ -4,7 +4,7 @@
  * @author ddgksf2013,axkrr
 */
 
-// 只有存在响应体时处理
+// 存在响应体时处理
 if (typeof $response !== "undefined" && $response.body) {
     let body = $response.body;
     
