@@ -1,5 +1,7 @@
-/*
-脚本名称: 航旅纵横 - 净化脚本
+/**
+ * @name hlzhpure
+ * @desc 航旅纵横净化
+ * @author axkrr
 */
 
 let body = $response.body;
