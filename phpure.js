@@ -4,7 +4,7 @@
  * @author ddgksf2013,axkrr
 */
 
-// 只有当存在响应体时才处理
+// 只有存在响应体时处理
 if (typeof $response !== "undefined" && $response.body) {
     let body = $response.body;
     
@@ -15,10 +15,10 @@ if (typeof $response !== "undefined" && $response.body) {
         body = body.replace(/<head>/, `<head>${cssLink}`);
         $done({ body });
     } else {
-        // 若不是HTML直接原样返回
+        // 不是HTML直接原样返回
         $done({ body });
     }
 } else {
-    // 若没有body直接结束
+    // 没有body直接结束
     $done({});
 }
