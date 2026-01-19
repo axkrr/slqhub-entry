@@ -7,22 +7,21 @@
 var body = $response.body;
 var obj = JSON.parse(body);
 
-// 保持成功状态码，防止启动卡死
-obj.code = 1; 
+console.log("qdpure-original: " + body);
 
-// 保留数组格式，抹除具体的平台配置
-if (Array.isArray(obj.data)) {
-    obj.data = obj.data.map(item => ({
-        ...item,
-        "id": "",      // 清空广告位ID
-        "value": ""    // 清空校验Token
-    }));
-}
-
-// 其他辅助字段处理
 obj.load = 0;
 obj.bid = [];
 obj.lns = 0;
+
+if (obj.data && Array.isArray(obj.data)) {
+    obj.data = obj.data.map(item => {
+        item.id = ""; 
+        item.value = "";
+        return item;
+    });
+}
+
+console.log("qdpure-modified: " + JSON.stringify(obj));
 
 // 重新打包返回
 body = JSON.stringify(obj);
