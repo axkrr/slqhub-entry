@@ -9,24 +9,44 @@ if (body) {
     let obj = JSON.parse(body);
     let url = $request.url;
 
-    // 修改初始化配置
+    // 依然保留以防App部分功能仍依赖旧接口
     if (url.indexOf("init/config/init") !== -1) {
         if (obj.data) {
-            // 移除开屏广告配置
             if (obj.data.screen_ad) delete obj.data.screen_ad;
             if (obj.data.splash) delete obj.data.splash;
-            // 尝试下发空配置
             obj.data.is_show_ad = false; 
             obj.data.ad_config = [];
         }
     }
 
-    // 处理首页弹窗
     if (url.indexOf("init/config/popupconfig") !== -1) {
         if (obj.data) {
             obj.data.popupList = [];
             if (obj.data.vipSales) obj.data.vipSales.needShow = false;
         }
+    }
+
+    // 接口1:广告全局配置
+    // 清空广告商列表和广告位列表并将轮询时间调至极大
+    if (url.indexOf("adxserver/ad/getconfig") !== -1) {
+        if (obj.data) {
+            obj.data.adnList = [];
+            obj.data.adList = [];
+            obj.data.splashShowAdIdMap = {};
+            obj.data.feedAdIdMap = {};
+            // 防止SDK空配置后无限重试
+            if (obj.data.config) {
+                obj.data.config.splashShowReplenishTime = 2147483647;
+                obj.data.config.pullIntervalTime = 2147483647;
+            }
+        }
+    }
+
+    // 接口2:广告具体载荷
+    // 如果漏网发起了请求，直接返回空数据
+    if (url.indexOf("adxserver/ad/adreq") !== -1) {
+        // 直接清空data对象，模拟无广告填充
+        obj.data = {};
     }
 
     $done({ body: JSON.stringify(obj) });
