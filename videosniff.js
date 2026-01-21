@@ -12,8 +12,9 @@ if (videoRegex.test(url)) {
 
   // m3u8时长判断
   if (/\.m3u8/i.test(url)) {
-    $httpClient.get(url, (err, resp, body) => {
-      if (err || !body) {
+    $task.fetch({ url }).then(resp => {
+      const body = resp.body;
+      if (!body) {
         $done({});
         return;
       }
@@ -32,7 +33,10 @@ if (videoRegex.test(url)) {
       }
 
       handlePlay();
+    }).catch(() => {
+      $done({});
     });
+
   } else {
     handlePlay();
   }
