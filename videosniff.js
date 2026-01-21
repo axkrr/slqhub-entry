@@ -49,8 +49,8 @@ function handlePlay() {
   const lastTime = $prefs.valueForKey(ONCE_KEY);
   const now = Date.now();
 
-  // 20秒内已经弹过窗则跳过
-  if (lastTime && (now - parseInt(lastTime) < 20000)) {
+  // 60秒内已经弹过窗则跳过
+  if (lastTime && (now - parseInt(lastTime) < 60000)) {
     console.log("🚫 SenPlayer: 冷却中，跳过检测");
     $done({});
   } else {
