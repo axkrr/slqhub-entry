@@ -9,6 +9,39 @@ const ONCE_KEY = "senplayer_once";
 const videoRegex = /\.(m3u8|mp4|mov|avi|flv)(\?.*)?$|playlist\.m3u8/i;
 
 if (videoRegex.test(url)) {
+
+  // m3u8时长判断
+  if (/\.m3u8/i.test(url)) {
+    $httpClient.get(url, (err, resp, body) => {
+      if (err || !body) {
+        $done({});
+        return;
+      }
+
+      let duration = 0;
+      body.split("\n").forEach(line => {
+        if (line.startsWith("#EXTINF:")) {
+          duration += parseFloat(line.replace("#EXTINF:", ""));
+        }
+      });
+
+      if (duration < 60) {
+        console.log("🚫 SenPlayer: 视频时长 < 60 秒，跳过");
+        $done({});
+        return;
+      }
+
+      handlePlay();
+    });
+  } else {
+    handlePlay();
+  }
+
+} else {
+  $done({});
+}
+
+function handlePlay() {
   const lastTime = $prefs.valueForKey(ONCE_KEY);
   const now = Date.now();
 
@@ -28,6 +61,4 @@ if (videoRegex.test(url)) {
 
     $done({});
   }
-} else {
-  $done({});
 }
