@@ -1,5 +1,7 @@
-/*
-AnyThink/TopOn & Lingye Ad Block Script
+/**
+ * @name 123panpure
+ * @desc 123云盘净化
+ * @author axkrr
 */
 
 const url = $request.url;
